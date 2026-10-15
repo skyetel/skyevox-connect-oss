@@ -8,7 +8,7 @@
   "license": "UNLICENSED",
   "private": true,
   "devDependencies": {
-    "electron": "^43.1.1",
+    "electron": "^43.7.9",
     "electron-builder": "^26.15.3"
   },
   "scripts": {
