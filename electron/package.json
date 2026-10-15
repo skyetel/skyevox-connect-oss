@@ -1,0 +1,81 @@
+{
+  "name": "skyevox-connect-desktop",
+  "version": "4.0.44",
+  "description": "SkyeVox Connect Desktop - Softphone by Skyetel",
+  "homepage": "https://skyetel.com",
+  "main": "main.js",
+  "author": "Skyetel",
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {
+    "electron": "^43.1.1",
+    "electron-builder": "^26.15.3"
+  },
+  "scripts": {
+    "test": "node --test *.test.js",
+    "start": "electron .",
+    "dist:linux": "electron-builder --linux AppImage deb",
+    "dist:win": "electron-builder --win nsis",
+    "dist:mac": "electron-builder --mac dmg"
+  },
+  "build": {
+    "appId": "com.skyetel.skyevox-connect",
+    "productName": "SkyeVox Connect",
+    "copyright": "Copyright © Skyetel",
+    "files": [
+      "main.js",
+      "preload.js",
+      "security.js",
+      "diagnostic-log.js",
+      "call-park.js",
+      "window-options.js"
+    ],
+    "extraResources": [
+      {
+        "from": "../dist",
+        "to": "app"
+      },
+      {
+        "from": "../chrome-extension",
+        "to": "chrome-extension"
+      }
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Network",
+      "maintainer": "Skyetel",
+      "icon": "../chrome-extension/icons"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "../chrome-extension/icons/icon512.png",
+      "signtoolOptions": {
+        "publisherName": "Skyetel"
+      },
+      "artifactName": "SkyeVox-Connect-Setup-${version}.${ext}"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "../chrome-extension/icons/icon512.png",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "SkyeVox Connect needs microphone access for phone calls.",
+        "NSCameraUsageDescription": "SkyeVox Connect needs camera access to scan provisioning QR codes."
+      }
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "SkyeVox Connect",
+      "menuCategory": "SkyeVox Connect",
+      "uninstallDisplayName": "SkyeVox Connect",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true,
+      "include": "build/installer.nsh"
+    }
+  }
+}

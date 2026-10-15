@@ -1,0 +1,29 @@
+{
+  "name": "linphone-sdk",
+  "version": "5.4.125",
+  "summary": "Liblinphone is a library to create VoIP and IM apps, based on SIP protocol.",
+  "description": "Local mirror of Belledonne's linphone-sdk podspec (https://gitlab.linphone.org/BC/public/podspec.git, generated from linphone-sdk/cmake/IOS/linphone-sdk.podspec.cmake) pinned to the same 5.4.x as android/app/build.gradle. The tester frameworks and the mediastreamer codec plugins SkyeVox Connect does not use (AMR, codec2, openh264, SILK) are not embedded.",
+  "homepage": "https://github.com/BelledonneCommunications/linphone-iphone",
+  "license": { "type": "GNU GPL 3" },
+  "authors": { "Belledonne Communications SARL": "linphone-iphone@belledonne-communications.com" },
+  "platforms": { "ios": "13.0" },
+  "source": { "http": "https://download.linphone.org/releases/ios/linphone-sdk-5.4.125.zip" },
+  "vendored_frameworks": [
+    "linphone-sdk/apple-darwin/XCFrameworks/bctoolbox.xcframework",
+    "linphone-sdk/apple-darwin/XCFrameworks/bctoolbox-ios.xcframework",
+    "linphone-sdk/apple-darwin/XCFrameworks/belcard.xcframework",
+    "linphone-sdk/apple-darwin/XCFrameworks/belle-sip.xcframework",
+    "linphone-sdk/apple-darwin/XCFrameworks/belr.xcframework",
+    "linphone-sdk/apple-darwin/XCFrameworks/lime.xcframework",
+    "linphone-sdk/apple-darwin/XCFrameworks/linphone.xcframework",
+    "linphone-sdk/apple-darwin/XCFrameworks/mbedcrypto.xcframework",
+    "linphone-sdk/apple-darwin/XCFrameworks/mbedtls.xcframework",
+    "linphone-sdk/apple-darwin/XCFrameworks/mbedx509.xcframework",
+    "linphone-sdk/apple-darwin/XCFrameworks/mediastreamer2.xcframework",
+    "linphone-sdk/apple-darwin/XCFrameworks/ortp.xcframework"
+  ],
+  "module_name": "linphonesw",
+  "swift_versions": "5.0",
+  "source_files": "linphone-sdk/apple-darwin/share/linphonesw/*.swift",
+  "frameworks": ["linphone", "belle-sip", "bctoolbox"]
+}

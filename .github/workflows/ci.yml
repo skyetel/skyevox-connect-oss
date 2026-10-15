@@ -1,0 +1,212 @@
+name: CI
+
+on:
+  push:
+    branches: [main, sovereign-softphone]
+  pull_request:
+    branches: [main, sovereign-softphone]
+
+permissions:
+  contents: read
+
+# Only actions/checkout, actions/setup-node, actions/setup-java and
+# android-actions/setup-android are used; all pinned by commit SHA.
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate platform versions
+        run: npm run check:versions
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=low
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Validate Chrome extension scripts
+        run: |
+          node --check chrome-extension/background.js
+          node --check chrome-extension/content.js
+          node --check chrome-extension/popup.js
+
+      - name: Validate Capacitor mobile project
+        run: |
+          npx cap ls
+          npx cap sync android
+
+  desktop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            electron/package-lock.json
+
+      - name: Build web application
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install desktop dependencies
+        working-directory: electron
+        run: npm ci
+
+      - name: Audit desktop dependencies
+        working-directory: electron
+        run: npm audit --audit-level=low
+
+      - name: Test desktop security helpers
+        working-directory: electron
+        run: npm test
+
+      - name: Package desktop application
+        working-directory: electron
+        run: npx electron-builder --linux dir
+
+      - name: Validate package contents
+        run: |
+          test -x electron/dist/linux-unpacked/skyevox-connect-desktop
+          test -f electron/dist/linux-unpacked/resources/app/index.html
+          test -f electron/dist/linux-unpacked/resources/app.asar
+          electron/node_modules/.bin/asar list electron/dist/linux-unpacked/resources/app.asar | grep -Fx '/security.js'
+
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+        with:
+          packages: platforms;android-34 build-tools;34.0.0 platform-tools
+
+      - name: Build web and synchronize Android application
+        run: |
+          npm ci
+          npm run check:versions
+          npm run build
+          npx cap sync android
+
+      # The SIP engine is org.linphone:linphone-sdk-android, resolved by Gradle
+      # from https://linphone.org/maven_repository (see android/app/build.gradle).
+      # No native toolchain build step is required.
+      - name: Compile Android debug application
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+
+      - name: Validate Android package
+        run: test -f android/app/build/outputs/apk/debug/app-debug.apk
+
+  ios:
+    runs-on: macos-latest
+    # Wave 1: disabled. The iOS target requires the liblinphone CocoaPod
+    # (pod 'linphone-sdk') and the SkyeVoxNative Swift plugin, which land in
+    # Wave 2. To enable, replace the guard below with a repository variable:
+    #   if: ${{ vars.IOS_CI_ENABLED == 'true' }}
+    if: false
+    continue-on-error: false
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Build and synchronize iOS application
+        run: |
+          npm ci
+          npm run check:versions
+          npm run build
+          npx cap sync ios
+
+      - name: Compile iOS simulator application
+        run: >-
+          xcodebuild
+          -workspace ios/App/App.xcworkspace
+          -scheme App
+          -configuration Debug
+          -sdk iphonesimulator
+          -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO
+          build
+
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      # Plain grep, no extra tooling. Fails if SIP credentials, APNs/FCM key
+      # material, or push secrets are committed. Test fixtures may use the
+      # literal placeholder values allowed below.
+      - name: Scan for committed credentials
+        run: |
+          set -u
+          fail=0
+          scan() {
+            local label="$1" pattern="$2"
+            local hits
+            hits=$(git grep -n -I -E -e "$pattern" -- \
+              ':!package-lock.json' ':!electron/package-lock.json' ':!.github/workflows/ci.yml' \
+              ':!*.test.ts' ':!*.test.tsx' ':!*.test.js' ':!*.test.mjs' || true)
+            if [ -n "$hits" ]; then
+              echo "::error::$label"
+              echo "$hits"
+              fail=1
+            fi
+          }
+          scan "APNs / private key material committed" \
+            '-----BEGIN (RSA |EC |OPENSSH |ENCRYPTED |)?PRIVATE KEY-----'
+          scan "APNs .p8 auth key filename committed" \
+            'AuthKey_[A-Z0-9]{10}\.p8'
+          scan "FCM service-account JSON committed" \
+            '"type": *"service_account"'
+          scan "Google API key committed" \
+            'AIza[0-9A-Za-z_-]{35}'
+          scan "SIP / push secret literal committed" \
+            '(sip_?password|sipPassword|SIP_PASSWORD|X-SkyeVox-Mobile-Wake-Secret|X-SkyeVox-Webhook-Secret|MOBILE_WAKE_SECRET|WEBHOOK_SECRET)["'"'"']? *[:=] *["'"'"'][A-Za-z0-9+/=_-]{12,}["'"'"']'
+          scan "Basic-auth credentials embedded in a SIP/WSS URL" \
+            '(sips?|wss?)://[^/\s:@]+:[^/\s@]+@[A-Za-z0-9.-]+'
+          if [ "$fail" -ne 0 ]; then
+            echo "Secrets scan failed. Move the value to the secrets manager and reference it by environment variable name."
+            exit 1
+          fi
+          echo "Secrets scan passed."

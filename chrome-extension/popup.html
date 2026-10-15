@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="popup.css" />
+  <title>SkyeVox Connect</title>
+</head>
+<body>
+  <div class="popup">
+    <div class="header">
+      <div class="logo">
+        <img src="icons/icon48.png" alt="SkyeVox" width="24" height="24" />
+        <span>SkyeVox Connect</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <label class="toggle-row">
+        <span>Detect phone numbers</span>
+        <input type="checkbox" id="enableToggle" checked />
+      </label>
+    </div>
+
+    <div class="section">
+      <div class="label">Quick Dial</div>
+      <div class="dial-row">
+        <input type="tel" id="dialInput" placeholder="Enter number..." />
+        <button id="dialBtn" class="call-btn" title="Call">
+          &#9742;
+        </button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="label">Excluded Domains</div>
+      <div class="excluded-row">
+        <input type="text" id="excludeInput" placeholder="example.com" />
+        <button id="addExcludeBtn" class="add-btn" title="Add">+</button>
+      </div>
+      <div id="excludeList" class="exclude-list"></div>
+    </div>
+
+    <div class="footer">
+      <a href="https://connect.skyetel.money" target="_blank">Open SkyeVox Connect</a>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

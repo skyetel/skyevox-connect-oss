@@ -1,0 +1,87 @@
+name: Build Android Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish APK and AAB to the GitHub Release
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+        with:
+          packages: platforms;android-34 build-tools;34.0.0 platform-tools
+
+      - name: Build web application
+        run: |
+          npm ci
+          npm run check:versions
+          npm test
+          npm run build
+          npx cap sync android
+
+      - name: Restore release keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.SKYEVOX_ANDROID_KEYSTORE_B64 }}
+        run: |
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/skyevox-connect-release.keystore"
+          chmod 600 "$RUNNER_TEMP/skyevox-connect-release.keystore"
+
+      - name: Build signed APK and AAB
+        working-directory: android
+        env:
+          SKYEVOX_ANDROID_KEYSTORE: ${{ runner.temp }}/skyevox-connect-release.keystore
+          SKYEVOX_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.SKYEVOX_ANDROID_KEYSTORE_PASSWORD }}
+          SKYEVOX_ANDROID_KEY_ALIAS: ${{ secrets.SKYEVOX_ANDROID_KEY_ALIAS }}
+          SKYEVOX_ANDROID_KEY_PASSWORD: ${{ secrets.SKYEVOX_ANDROID_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon assembleRelease bundleRelease
+
+      - name: Stage versioned artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          mkdir -p release
+          cp android/app/build/outputs/apk/release/app-release.apk "release/SkyeVoxConnect-v${version}-android.apk"
+          cp android/app/build/outputs/bundle/release/app-release.aab "release/SkyeVoxConnect-v${version}-android.aab"
+          sha256sum release/* > release/SHA256SUMS-android.txt
+
+      - name: Publish Android artifacts
+        if: ${{ inputs.publish }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          tag="skyevox-connect-v${version}"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" --target "$GITHUB_SHA" --title "SkyeVox Connect v${version}" --notes "SkyeVox Connect cross-platform release v${version}."
+          fi
+          gh release upload "$tag" release/* --clobber

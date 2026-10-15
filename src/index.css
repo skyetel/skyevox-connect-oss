@@ -1,0 +1,224 @@
+@import "tailwindcss";
+
+:root {
+  --skyetel-blue: #0066B3;
+  --skyetel-bright: #3887FF;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --portal-bg: #001429;
+  --portal-line: #1d4370;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--portal-bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+ 
+.connect-portal-background {
+  background:
+    radial-gradient(1100px 560px at 82% -12%, rgba(79, 140, 255, 0.16), transparent 60%),
+    var(--portal-bg);
+}
+
+.connect-phone-card {
+  width: min(760px, calc(100vw - 48px));
+  border-color: var(--portal-line);
+  box-shadow: 0 28px 90px rgba(0, 8, 20, 0.62);
+}
+
+@media (max-width: 480px) {
+  .connect-phone-card {
+    width: calc(100vw - 24px);
+  }
+}
+/* Prevent text selection on mobile (except inputs) */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Safe area padding for native apps */
+.safe-area-top {
+  padding-top: var(--safe-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: var(--safe-bottom);
+}
+
+.safe-area-x {
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+/* Full-screen layout for mobile */
+.mobile-fullscreen {
+  min-height: 100dvh;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+
+/* Touch-friendly targets (44px minimum) */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Phase 2: Pulsing animation for ringing status dot */
+@keyframes pulse-ring {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.4);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 1.2s ease-in-out infinite;
+}
+
+/* Phase 2: Pulsing red dot for recording indicator */
+@keyframes pulse-rec {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-pulse-rec {
+  animation: pulse-rec 1s ease-in-out infinite;
+}
+
+/* Phase 2: Swipe-to-delete transition */
+.voicemail-item {
+  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+}
+
+.voicemail-item.deleting {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+/* Phase 3: Swipe indicator for incoming calls */
+@keyframes swipe-hint-right {
+  0% { transform: translateX(0); opacity: 0.4; }
+  50% { transform: translateX(12px); opacity: 1; }
+  100% { transform: translateX(0); opacity: 0.4; }
+}
+
+@keyframes swipe-hint-left {
+  0% { transform: translateX(0); opacity: 0.4; }
+  50% { transform: translateX(-12px); opacity: 1; }
+  100% { transform: translateX(0); opacity: 0.4; }
+}
+
+.swipe-hint-right {
+  animation: swipe-hint-right 1.5s ease-in-out infinite;
+}
+
+.swipe-hint-left {
+  animation: swipe-hint-left 1.5s ease-in-out infinite;
+}
+
+/* Phase 4: Accessibility */
+
+/* Skip link - hidden until focused */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 100;
+}
+
+.skip-link:focus {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: auto;
+  height: auto;
+  padding: 8px 16px;
+  background: #0066B3;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  z-index: 100;
+  outline: none;
+}
+
+/* Focus visible outlines for keyboard navigation */
+:focus-visible {
+  outline: 2px solid #0066B3;
+  outline-offset: 2px;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  button {
+    border: 1px solid currentColor;
+  }
+
+  .border-gray-100,
+  .border-gray-200 {
+    border-color: #333;
+  }
+
+  .text-gray-300,
+  .text-gray-400 {
+    color: #555;
+  }
+
+  .text-gray-500 {
+    color: #444;
+  }
+
+  .bg-gray-50 {
+    background-color: #f0f0f0;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Phase 4: Screen pop slide-in */
+@keyframes slide-down {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
+}
+
+/* Phase 4: Update banner */
+.update-banner {
+  background: linear-gradient(135deg, #0066B3 0%, #3887FF 100%);
+}

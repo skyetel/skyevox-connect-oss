@@ -1,0 +1,37 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: '1.25.12'
+          cache: false
+
+      - name: Scan Git history for secrets
+        run: |
+          GOBIN="$RUNNER_TEMP/bin" go install github.com/zricethezav/gitleaks/v8@v8.30.1
+          "$RUNNER_TEMP/bin/gitleaks" git --redact=100 --verbose .
+
+      - name: Run repository policy checks
+        run: python3 scripts/security/checks.py
+
+      - name: Test repository policy checks
+        env:
+          PYTHONPATH: scripts/security
+        run: python3 -m unittest discover -s scripts/security -p 'test_*.py'

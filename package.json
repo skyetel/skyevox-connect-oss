@@ -1,0 +1,63 @@
+{
+  "name": "skyevox-connect",
+  "private": true,
+  "version": "4.0.44",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "postinstall": "node scripts/patch-capacitor-tar.cjs && node scripts/patch-sip-registerer.cjs",
+    "check:versions": "node scripts/check-version-sync.mjs",
+    "check:published-version": "node scripts/check-published-version.mjs",
+    "test": "node --experimental-strip-types --import ./scripts/test-resolver.mjs --test src/api/connect-sw.test.ts src/api/dnd.test.ts src/api/push.test.ts src/api/supervisor.test.ts src/api/voicemail.test.ts src/audio/ringtone.test.ts src/callPark.test.ts src/callState.test.ts src/callWaitingLifecycle.test.ts src/config.test.ts src/embedded.test.ts src/platform.test.ts src/hooks/useCallQuality.test.ts src/sip/audioPolicy.test.ts src/sip/contactIdentity.test.ts src/sip/iceServers.test.ts src/sip/reconnectPolicy.test.ts src/sip/registrationContact.test.ts src/sip/secondCallAnswer.test.ts src/sip/sessionControl.test.ts src/sip/SipClient.test.ts && npm --prefix electron test",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "cap:sync": "npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios",
+    "cap:run:android": "npx cap run android",
+    "build:android": "npm run build && npx cap sync android",
+    "build:electron": "npm run build && cd electron && npm install",
+    "dist:electron:linux": "npm run build:electron && cd electron && npx electron-builder --linux AppImage deb",
+    "dist:electron:win": "npm run build:electron && cd electron && npx electron-builder --win nsis",
+    "dist:electron:mac": "npm run build:electron && cd electron && npx electron-builder --mac dmg"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/app": "^6.0.3",
+    "@capacitor/core": "^6.2.1",
+    "@capacitor/haptics": "^6.0.3",
+    "@capacitor/ios": "^6.2.1",
+    "@capacitor/preferences": "^6.0.4",
+    "@capacitor/push-notifications": "^6.0.5",
+    "@capacitor/status-bar": "^6.0.3",
+    "@tailwindcss/vite": "^4.3.3",
+    "i18next": "^25.10.10",
+    "i18next-browser-languagedetector": "^8.2.1",
+    "jsqr": "^1.4.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-i18next": "^16.6.6",
+    "sip.js": "0.21.2",
+    "tailwindcss": "^4.2.1",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.1",
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.2.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^16.5.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.64.0",
+    "vite": "^7.3.1"
+  },
+  "overrides": {
+    "tar": "^7.5.22"
+  }
+}

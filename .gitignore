@@ -1,0 +1,24 @@
+node_modules/
+dist/
+.env
+*.local
+.DS_Store
+__pycache__/
+*.py[cod]
+
+# Android
+android/app/skyevox-release.keystore
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+
+# iOS
+ios/App/Pods/
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+
+# Electron
+electron/node_modules/
+electron/release/
+electron/dist/

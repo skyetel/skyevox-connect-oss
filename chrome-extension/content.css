@@ -1,0 +1,28 @@
+.skyevox-phone {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: #0066B3;
+  text-underline-offset: 2px;
+  position: relative;
+  border-radius: 2px;
+  transition: background-color 0.15s;
+}
+
+.skyevox-phone:hover {
+  background-color: rgba(0, 102, 179, 0.08);
+  text-decoration-style: solid;
+}
+
+.skyevox-phone::after {
+  content: '\260E';
+  margin-left: 2px;
+  font-size: 0.85em;
+  color: #0066B3;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.skyevox-phone:hover::after {
+  opacity: 1;
+}
